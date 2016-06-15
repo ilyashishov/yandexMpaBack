@@ -164,6 +164,37 @@ app.post('/current', function(req, res){
     return;
 })
 
+app.post('/chats/list', function(req, res){
+    var user;
+    var promise = new Promise(function(resolve, reject){
+        DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"'", function(data){
+            if(data.length != 0){
+                user = data[0];
+            }else{
+                user = false;
+                resolve({ok: false, a: 1});
+            }
+            if(user){
+                DbData("SELECT * FROM chats WHERE user_id_1 = '"+user.id+"' OR user_id_2 = '"+user.id+"'", function(data){
+                    if(data.length != 0){
+                        resolve({ok: true, chats: data});
+                    }else{
+                        chats = false;
+                        resolve({ok: false, a: 2});
+                    }
+                });
+            }
+        });
+    });
+
+    promise.then(
+        function(result){
+            res.send(result);
+        }
+    );
+    return;
+})
+
 app.post('/getMessages', function(req, res){
     res.send(messages);
 })
