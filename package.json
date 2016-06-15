@@ -1,0 +1,30 @@
+{
+  "name": "yandex_map_back",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "watchify server.js -t babelify -o build/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "browserify": "^13.0.1",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.13.4",
+    "express-session": "^1.13.0",
+    "express-ws": "^2.0.0-rc.1",
+    "pg": "^5.0.0",
+    "watchify": "^3.7.0",
+    "winston": "^2.2.0",
+    "ws": "^1.1.0"
+  },
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-core": "^6.9.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babelify": "^7.3.0"
+  }
+}
