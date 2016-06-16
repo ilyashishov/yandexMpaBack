@@ -58,13 +58,8 @@ wss.on('connection', function connection(ws) {
   }
 
   wsNewMessage = function(data){
-    messages.push({
-        id: data.id,
-        text: data.mes
-    })
     wsConnections.forEach(function(item, i, arr){
-        // item.ws.send('{id:' + a.id + ', message: "' + a.mes + '"}');
-        item.ws.send(JSON.stringify(messages));
+        item.ws.send(JSON.stringify(data));
     })
   }
 
@@ -107,8 +102,8 @@ app.post('/login', function(req, res){
     log.info(code);
     res.send({ok: true});
     loginUser.push({phoneNumber: req.body.phoneNumber, code: code});
-    return;
-})
+    return true;
+});
 
 app.post('/login/code', function(req, res){
     var request = false;
@@ -135,9 +130,9 @@ app.post('/login/code', function(req, res){
         });
     }else{
         res.send({ok: false});
-        return;
+        return true;
     }
-})
+});
 
 app.post('/registration', function(req, res){
     var hash = makeid(15);
@@ -148,10 +143,10 @@ app.post('/registration', function(req, res){
         }
     });
     if(hash){
-        return;
+        return true;
     }
     res.send({ok: false})
-})
+});
 
 app.post('/current', function(req, res){
     DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"'", function(data){
@@ -161,26 +156,26 @@ app.post('/current', function(req, res){
             res.send({ok: false});
         }
     });
-    return;
-})
+    return true;
+});
 
 app.post('/chats/list', function(req, res){
-    var user;
+    var user, user2ID;
     var promise = new Promise(function(resolve, reject){
         DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"'", function(data){
             if(data.length != 0){
                 user = data[0];
             }else{
                 user = false;
-                resolve({ok: false, a: 1});
+                resolve({ok: false});
             }
             if(user){
-                DbData("SELECT * FROM chats WHERE user_id_1 = '"+user.id+"' OR user_id_2 = '"+user.id+"'", function(data){
+                // DbData("SELECT chats.id, chats.name, chats.last_change_date, chats.user_id_1, chats.user_id_2, users.avatar  FROM chats, users WHERE chats.user_id_1 = '"+user.id+"' OR chats.user_id_2 = '"+user.id+"' OR users.id <> '"+user.id+"'", function(data){
+                DbData("SELECT c.id, c.name, c.last_change_date, c.user_id_1, c.user_id_2, u.avatar FROM chats c INNER JOIN users u ON (u.id = c.user_id_1 AND c.user_id_1 <> '"+user.id+"') OR (u.id = c.user_id_2 AND c.user_id_2 <> '"+user.id+"')  WHERE c.user_id_1 = '"+user.id+"' OR  c.user_id_2 = '"+user.id+"'  ", function(data){
                     if(data.length != 0){
                         resolve({ok: true, chats: data});
                     }else{
-                        chats = false;
-                        resolve({ok: false, a: 2});
+                        resolve({ok: false});
                     }
                 });
             }
@@ -192,16 +187,62 @@ app.post('/chats/list', function(req, res){
             res.send(result);
         }
     );
-    return;
-})
+    return true;
+});
+
+app.post('/chat/messages', function(req, res){
+    var promise = new Promise(function(resolve, reject){
+        DbData("SELECT * FROM messages WHERE chat_id = '"+req.body.chat_id+"'", function(data){
+            console.log(data);
+            if(data.length != 0){
+                resolve({ok: true, messages: data});
+            }else{
+                resolve({ok: false, messages: []});
+            }
+        });
+    });
+
+    promise.then(
+        function(result){
+            res.send(result);
+        }
+    );
+    return true;
+});
+
+app.post('/chat/message/new', function(req, res){
+    var promise = new Promise(function(resolve, reject){
+        DbData("INSERT INTO messages (chat_id, user_id, text, date) VALUES ("+req.body.chat_id+", "+req.body.user_id+", '"+req.body.text+"', '"+req.body.date+"')", function(data){
+            console.log(data);
+            if(data.length != 0){
+                resolve({ok: true});
+            }else{
+                resolve({ok: false});
+            }
+        });
+    });
+
+    promise.then(
+        function(result){
+            wsNewMessage(req.body);
+            res.send(result);
+        }
+    );
+    return true;
+});
+
+
+
+
+
 
 app.post('/getMessages', function(req, res){
     res.send(messages);
-})
+});
 
 app.get('/', function(req, res) {
      res.send('API is running');
-})
+});
 
 app.listen(80, '0.0.0.0',  function(){
      log.info('Express server listening on port 8090');
