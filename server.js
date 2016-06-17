@@ -11,6 +11,31 @@ var WebSocketServer = require('ws').Server
 var log = require('./libs/log')(module);
 const app  = express();
 
+var MultiGeocoder = require('multi-geocoder'),
+    geocoder = new MultiGeocoder({ provider: 'yandex-cache', coordorder: 'latlong' });
+var request = require('request'), cheerio = require('cheerio');
+var eventPosition = [];
+request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'},
+    function (err, res, page) {
+        var $=cheerio.load(page);
+        $('div.span3 .coupon-meta .coupon-save').each(function (index, i) {
+            if($(i).text().replace(/\s{2,}/g, ' ').length > 2){
+                geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
+                    .then(function (res) {
+                        eventPosition.push({
+                            img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
+                            title: $(i).parent().parent().parent().find('.coupon-title').text(),
+                            desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+                            address: res.result.features[0].properties.name,
+                            position: res.result.features[0].geometry.coordinates
+                        })
+                        console.log(res.result.features[0].properties);
+                    });
+            }
+        })
+    });
+
+
 
 function makeid(length){
     var text = "";
@@ -171,11 +196,11 @@ app.post('/chats/list', function(req, res){
             }
             if(user){
                 // DbData("SELECT chats.id, chats.name, chats.last_change_date, chats.user_id_1, chats.user_id_2, users.avatar  FROM chats, users WHERE chats.user_id_1 = '"+user.id+"' OR chats.user_id_2 = '"+user.id+"' OR users.id <> '"+user.id+"'", function(data){
-                DbData("SELECT c.id, c.name, c.last_change_date, c.user_id_1, c.user_id_2, u.avatar FROM chats c INNER JOIN users u ON (u.id = c.user_id_1 AND c.user_id_1 <> '"+user.id+"') OR (u.id = c.user_id_2 AND c.user_id_2 <> '"+user.id+"')  WHERE c.user_id_1 = '"+user.id+"' OR  c.user_id_2 = '"+user.id+"'  ", function(data){
+                DbData("SELECT c.id, c.name, c.last_change_date, c.user_id_1, c.user_id_2, c.last_message, u.avatar, u.last_name, u.first_name FROM chats c INNER JOIN users u ON (u.id = c.user_id_1 AND c.user_id_1 <> '"+user.id+"') OR (u.id = c.user_id_2 AND c.user_id_2 <> '"+user.id+"')  WHERE c.user_id_1 = '"+user.id+"' OR  c.user_id_2 = '"+user.id+"' ORDER BY last_change_date DESC NULLS LAST ", function(data){
                     if(data.length != 0){
                         resolve({ok: true, chats: data});
                     }else{
-                        resolve({ok: false});
+                        resolve({ok: false, chats: []});
                     }
                 });
             }
@@ -193,7 +218,6 @@ app.post('/chats/list', function(req, res){
 app.post('/chat/messages', function(req, res){
     var promise = new Promise(function(resolve, reject){
         DbData("SELECT * FROM messages WHERE chat_id = '"+req.body.chat_id+"'", function(data){
-            console.log(data);
             if(data.length != 0){
                 resolve({ok: true, messages: data});
             }else{
@@ -213,12 +237,18 @@ app.post('/chat/messages', function(req, res){
 app.post('/chat/message/new', function(req, res){
     var promise = new Promise(function(resolve, reject){
         DbData("INSERT INTO messages (chat_id, user_id, text, date) VALUES ("+req.body.chat_id+", "+req.body.user_id+", '"+req.body.text+"', '"+req.body.date+"')", function(data){
-            console.log(data);
             if(data.length != 0){
                 resolve({ok: true});
             }else{
                 resolve({ok: false});
             }
+        });
+        var lsatMassage = req.body.text.substr(0, 25);
+        if(req.body.text.lenght > 25) {
+            lsatMassage += '...'
+        }
+        DbData("UPDATE chats SET last_message = '"+lsatMassage+"', last_change_date = '"+req.body.date+"' WHERE id = '"+req.body.chat_id+"'", function () {
+            
         });
     });
 
@@ -231,7 +261,10 @@ app.post('/chat/message/new', function(req, res){
     return true;
 });
 
-
+app.get('/events', function(req, res){
+    res.send(eventPosition);
+    return true;
+});
 
 
 
