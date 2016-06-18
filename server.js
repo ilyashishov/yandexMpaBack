@@ -23,13 +23,14 @@ request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'}
                 geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
                     .then(function (res) {
                         eventPosition.push({
+                            dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
                             img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
                             title: $(i).parent().parent().parent().find('.coupon-title').text(),
                             desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
                             address: res.result.features[0].properties.name,
                             position: res.result.features[0].geometry.coordinates
                         })
-                        console.log(res.result.features[0].properties);
+                        console.log('Выгружено '+eventPosition.length+' записей');
                     });
             }
         })
