@@ -18,25 +18,46 @@ var eventPosition = [];
 request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'},
     function (err, res, page) {
         var $=cheerio.load(page);
-        $('div.span3 .coupon-meta .coupon-save').each(function (index, i) {
+        $('div.span3 .event_block').each(function (index, i) {
             if($(i).text().replace(/\s{2,}/g, ' ').length > 2){
-                geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
-                    .then(function (res) {
-                        eventPosition.push({
-                            dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                            img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
-                            title: $(i).parent().parent().parent().find('.coupon-title').text(),
-                            desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                            address: res.result.features[0].properties.name,
-                            position: res.result.features[0].geometry.coordinates
-                        })
-                        console.log('Выгружено '+eventPosition.length+' записей');
+                request({uri:'http://gorodzovet.ru/ev/penza/'+$(i).data('id') +'/', method:'GET', encoding:'utf-8'},
+                    function (err, res, page) {
+                        var $ = cheerio.load(page);
+                        if ($('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row').text().replace(/\s{2,}/g, ' ').length > 2) {
+                            var i2 = $('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row');
+                            i = $(i2).find('.col-md-5.col-md-offset-1.col-xs-12 p').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+                            if(i.length > 6){
+                                geocoder.geocode([i])
+                                    .then(function (res) {
+                                        eventPosition.push({
+                                            dateTime: $(i2).find('.event_date').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+                                            img: $(i2).find('.eventpage_avatar').attr('src'),
+                                            title: $(i2).find('.event_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+                                            desciption: $(i2).find('.event_description').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+                                            address: res.result.features[0].properties.name,
+                                            position: res.result.features[0].geometry.coordinates
+                                        })
+                                        console.log('Выгружено '+eventPosition.length+' записей');
+                                    });
+                            }
+                        }
                     });
             }
         })
     });
 
-
+// geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
+//     .then(function (res) {
+//         eventPosition.push({
+//             dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+//             img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
+//             title: $(i).parent().parent().parent().find('.coupon-title').text(),
+//             desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+//             address: res.result.features[0].properties.name,
+//             position: res.result.features[0].geometry.coordinates
+//         })
+//         // console.log('Выгружено '+eventPosition.length+' записей');
+//     });
 
 function makeid(length){
     var text = "";
