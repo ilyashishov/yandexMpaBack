@@ -196,7 +196,7 @@ app.post('/registration', function(req, res){
 });
 
 app.post('/user/edit', function(req, res){
-    DbData("UPDATE users SET last_name = "+req.body.lastName+", first_name = "+req.body.firstName+" WHERE token = "+req.body.hash, function(data){
+    DbData("UPDATE users SET last_name = "+req.body.lastName+", first_name = "+req.body.firstName+" WHERE token = "+req.body.hash+";", function(data){
         if(data.lenght == 0){
             request = true;
             req.send({ok: true});
@@ -206,6 +206,8 @@ app.post('/user/edit', function(req, res){
         }
     })
 })
+
+app.post('')
 
 app.post('/current', function(req, res){
     DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"'", function(data){
