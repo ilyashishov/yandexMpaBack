@@ -207,7 +207,6 @@ app.post('/user/edit', function(req, res){
     })
 })
 
-app.post('')
 
 app.post('/current', function(req, res){
     DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"'", function(data){
