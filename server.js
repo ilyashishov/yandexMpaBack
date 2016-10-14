@@ -15,12 +15,12 @@ var MultiGeocoder = require('multi-geocoder'),
     geocoder = new MultiGeocoder({ provider: 'yandex-cache', coordorder: 'latlong' });
 var request = require('request'), cheerio = require('cheerio');
 var eventPosition = [];
-request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'},
+request({uri:'http://gorodzovet.ru/list/nnovgorod/', method:'GET', encoding:'utf-8'},
     function (err, res, page) {
         var $=cheerio.load(page);
-        $('div.span3 .coupon-meta .coupon-save').each(function (index, i) {
+        $('div.span3 .coupon-inner').each(function (index, i) {
             if($(i).text().replace(/\s{2,}/g, ' ').length > 2){
-                geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
+                geocoder.geocode(["Нижний Новгород " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
                     .then(function (res) {
                         eventPosition.push({
                             dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
@@ -35,7 +35,6 @@ request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'}
             }
         })
     });
-
 
 
 function makeid(length){
@@ -66,7 +65,7 @@ wss.on('connection', function connection(ws) {
     console.log('received: %s', message);
   });
   ws.on('error', function incoming(message) {
-    console.log('Error: %s', message);
+    console.log('Error: %s', message); 
   });
   ws.on('close', function incoming(message) {
     wsConnections.forEach(function(item, i, arr){
@@ -267,6 +266,12 @@ app.get('/events', function(req, res){
     return true;
 });
 
+app.get('/getAddress', function (req, res) {
+    geocoder.geocode([req.query.latitude + ',' + req.query.longitude])
+        .then(function (res1) {
+            res.send(res1.result.features[0].properties.name)
+        });
+})
 
 
 
