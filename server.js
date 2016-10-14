@@ -197,7 +197,8 @@ app.post('/registration', function(req, res){
 
 app.post('/user/edit', function(req, res){
     DbData("UPDATE users SET last_name = '"+req.body.lastName+"', first_name = '"+req.body.firstName+"' WHERE token = '"+req.body.hash+"';", function(data){
-        if(data.lenght == 0){
+        console.log(data.length);
+        if(data.length == 0){
             request = true;
             res.send({ok: true});
         }else{
@@ -279,7 +280,7 @@ app.post('/chat/message/new', function(req, res){
             }
         });
         var lsatMassage = req.body.text.substr(0, 25);
-        if(req.body.text.lenght > 25) {
+        if(req.body.text.length > 25) {
             lsatMassage += '...'
         }
         DbData("UPDATE chats SET last_message = '"+lsatMassage+"', last_change_date = '"+req.body.date+"' WHERE id = '"+req.body.chat_id+"'", function () {
