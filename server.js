@@ -240,6 +240,21 @@ app.post('/current', function(req, res){
     return true;
 });
 
+app.post('/chats/new', function(req, res){
+    var userID, user2ID;
+    DbData("SELECT * FROM users WHERE token = '"+req.body.hash+"';", function(data){
+        if(data.length != 0){
+            userID = data[0].id;
+        }else{
+            user = false;
+            resolve({ok:false});
+        }
+//        if(userID){
+//
+//        }
+    })
+})
+
 app.post('/chats/list', function(req, res){
     var user, user2ID;
     var promise = new Promise(function(resolve, reject){
