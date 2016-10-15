@@ -182,7 +182,8 @@ app.post('/login/code', function(req, res){
 });
 
 app.post('/user/position/update', function(req, res){
-    DbData("UPDATE users SET latitude = '"+req.body.latitude+"', longitude = '"+req.body.longitude+"';", function(data){
+    console.log(req.body);
+    DbData("UPDATE users SET latitude = "+req.body.latitude+", longitude = "+req.body.longitude+" WHERE token = '"+req.body.hash+"';", function(data){
         if(data.length == 0){
             request = true;
             res.send({ok:true});
@@ -210,6 +211,7 @@ app.post('/registration', function(req, res){
 app.post('/user/edit', function(req, res){
     DbData("UPDATE users SET last_name = '"+req.body.lastName+"', first_name = '"+req.body.firstName+"' WHERE token = '"+req.body.hash+"';", function(data){
         console.log(data.length);
+        console.log(req.body.lastName);
         if(data.length == 0){
             request = true;
             res.send({ok: true});
