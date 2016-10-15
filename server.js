@@ -11,11 +11,13 @@ var WebSocketServer = require('ws').Server
 var log = require('./libs/log')(module);
 const app  = express();
 var multer = require('multer');
+var fs =require('fs');
 var storage =   multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, './uploads');
   },
   filename: function (req, file, callback) {
+      console.log(file)
     callback(null, file.fieldname + '-' + Date.now());
   }
 });
@@ -25,30 +27,42 @@ var MultiGeocoder = require('multi-geocoder'),
     geocoder = new MultiGeocoder({ provider: 'yandex-cache', coordorder: 'latlong' });
 var request = require('request'), cheerio = require('cheerio');
 var eventPosition = [];
-request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'},
+request({uri:'http://vkevent.ru/city109/', method:'GET', encoding:'utf-8'},
     function (err, res, page) {
         var $=cheerio.load(page);
-        $('div.span3 .event_block').each(function (index, i) {
+
+        $('.event_item').each(function (index, i) {
+
             if($(i).text().replace(/\s{2,}/g, ' ').length > 2){
-                request({uri:'http://gorodzovet.ru/ev/penza/'+$(i).data('id') +'/', method:'GET', encoding:'utf-8'},
+                request({uri: $(i).find('.event_page_link').attr('href'), method:'GET', encoding:'utf-8'},
                     function (err, res, page) {
                         var $ = cheerio.load(page);
-                        if ($('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row').text().replace(/\s{2,}/g, ' ').length > 2) {
-                            var i2 = $('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row');
-                            i = $(i2).find('.col-md-5.col-md-offset-1.col-xs-12 p').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
-                            if(i.length > 6){
-                                geocoder.geocode([i])
-                                    .then(function (res) {
-                                        eventPosition.push({
-                                            dateTime: $(i2).find('.event_date').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            img: $(i2).find('.eventpage_avatar').attr('src'),
-                                            title: $(i2).find('.event_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            desciption: $(i2).find('.event_description').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            address: res.result.features[0].properties.name,
-                                            position: res.result.features[0].geometry.coordinates
-                                        })
-                                        console.log('Выгружено '+eventPosition.length+' записей');
-                                    });
+                        if (true) {
+                            var title = $('.info_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+                            var img = $('.event_image').attr('src');
+                            var address = '';
+                            var dateTime = '';
+                            var position = $('#map_latlng').text();
+                            var description = $('.info_line.status').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+                            $('.info_line').each(function (index, i) {
+                                if($(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(0, 5) == 'Адрес'){
+                                    address = $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(7);
+                                }
+
+                                if($(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(0, 6) == 'Начало'){
+                                    dateTime = $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(8);
+                                    dateTime = dateTime.substr(0, dateTime.length - 16)
+                                }
+                            });
+                            if(position){
+                                eventPosition.push({
+                                    dateTime: dateTime,
+                                    img: img,
+                                    title: title,
+                                    description: description,
+                                    address: address,
+                                    position: position.split(', ')
+                                })
                             }
                         }
                     });
@@ -56,18 +70,6 @@ request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'}
         })
     });
 
-// geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
-//     .then(function (res) {
-//         eventPosition.push({
-//             dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-//             img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
-//             title: $(i).parent().parent().parent().find('.coupon-title').text(),
-//             desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-//             address: res.result.features[0].properties.name,
-//             position: res.result.features[0].geometry.coordinates
-//         })
-//         // console.log('Выгружено '+eventPosition.length+' записей');
-//     });
 
 function makeid(length){
     var text = "";
@@ -192,14 +194,12 @@ app.post('/login/code', function(req, res){
 });
 
 app.post('/file/photo/uploaded',function(req,res){
-    upload(req,res,function(err) {
-        console.log(req.file);
-        console.log(err);
-        if(err) {
-            return res.end("Error uploading file.");
-        }
-        res.end("File is uploaded");
-    });
+    console.log(req.body);
+    console.log(req.files);
+    console.log(req.file);
+    // fs.rename(req.body.file.path, './img/'+files.fileUploaded.name, function(err) {
+    //     console.log('renamed complete');
+    // });
 });
 
 app.post('/user/position/update', function(req, res){
