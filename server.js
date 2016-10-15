@@ -11,13 +11,11 @@ var WebSocketServer = require('ws').Server
 var log = require('./libs/log')(module);
 const app  = express();
 var multer = require('multer');
-var fs =require('fs');
 var storage =   multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, './uploads');
   },
   filename: function (req, file, callback) {
-      console.log(file)
     callback(null, file.fieldname + '-' + Date.now());
   }
 });
@@ -194,12 +192,14 @@ app.post('/login/code', function(req, res){
 });
 
 app.post('/file/photo/uploaded',function(req,res){
-    console.log(req.body);
-    console.log(req.files);
-    console.log(req.file);
-    // fs.rename(req.body.file.path, './img/'+files.fileUploaded.name, function(err) {
-    //     console.log('renamed complete');
-    // });
+    upload(req,res,function(err) {
+        console.log(req.file);
+        console.log(err);
+        if(err) {
+            return res.end("Error uploading file.");
+        }
+        res.end("File is uploaded");
+    });
 });
 
 app.post('/user/position/update', function(req, res){
@@ -364,3 +364,12 @@ app.get('/', function(req, res) {
 app.listen(80, '0.0.0.0',  function(){
      log.info('Express server listening on port 8090');
 });
+
+app.use(express.static('public'));
+//DbData("UPDATE events SET date_time = '"+dateTime+"' img = '"+img+"' title = '"+title+"' description = '"+description+"' address = '"+address+"' position = "+position+";", function(data){
+//                                            if (data.length == 0){
+//                                                console.log(inter++);
+//                                            }else{
+//                                                console.log('err');
+//                                            }
+//                                        });
