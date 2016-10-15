@@ -191,7 +191,7 @@ app.post('/login/code', function(req, res){
     }
 });
 
-app.post('/api/photo',function(req,res){
+app.post('/file/photo/uploaded',function(req,res){
     upload(req,res,function(err) {
         console.log(req.file);
         console.log(err);
