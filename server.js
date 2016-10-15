@@ -25,30 +25,42 @@ var MultiGeocoder = require('multi-geocoder'),
     geocoder = new MultiGeocoder({ provider: 'yandex-cache', coordorder: 'latlong' });
 var request = require('request'), cheerio = require('cheerio');
 var eventPosition = [];
-request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'},
+request({uri:'http://vkevent.ru/city109/', method:'GET', encoding:'utf-8'},
     function (err, res, page) {
         var $=cheerio.load(page);
-        $('div.span3 .event_block').each(function (index, i) {
+
+        $('.event_item').each(function (index, i) {
+
             if($(i).text().replace(/\s{2,}/g, ' ').length > 2){
-                request({uri:'http://gorodzovet.ru/ev/penza/'+$(i).data('id') +'/', method:'GET', encoding:'utf-8'},
+                request({uri: $(i).find('.event_page_link').attr('href'), method:'GET', encoding:'utf-8'},
                     function (err, res, page) {
                         var $ = cheerio.load(page);
-                        if ($('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row').text().replace(/\s{2,}/g, ' ').length > 2) {
-                            var i2 = $('.container-fluid.col-md-offset-1.col-md-offset-right-1 .row');
-                            i = $(i2).find('.col-md-5.col-md-offset-1.col-xs-12 p').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
-                            if(i.length > 6){
-                                geocoder.geocode([i])
-                                    .then(function (res) {
-                                        eventPosition.push({
-                                            dateTime: $(i2).find('.event_date').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            img: $(i2).find('.eventpage_avatar').attr('src'),
-                                            title: $(i2).find('.event_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            description: $(i2).find('.event_description').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            address: res.result.features[0].properties.name,
-                                            position: res.result.features[0].geometry.coordinates
-                                        })
-                                        console.log('Выгружено '+eventPosition.length+' записей');
-                                    });
+                        if (true) {
+                            var title = $('.info_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+                            var img = $('.event_image').attr('src');
+                            var address = '';
+                            var dateTime = '';
+                            var position = $('#map_latlng').text();
+                            var description = $('.info_line.status').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+                            $('.info_line').each(function (index, i) {
+                                if($(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(0, 5) == 'Адрес'){
+                                    address = $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(7);
+                                }
+
+                                if($(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(0, 6) == 'Начало'){
+                                    dateTime = $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '').substr(8);
+                                    dateTime = dateTime.substr(0, dateTime.length - 16)
+                                }
+                            });
+                            if(position){
+                                eventPosition.push({
+                                    dateTime: dateTime,
+                                    img: img,
+                                    title: title,
+                                    description: description,
+                                    address: address,
+                                    position: position.split(', ')
+                                })
                             }
                         }
                     });
