@@ -43,7 +43,7 @@ request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'}
                                             dateTime: $(i2).find('.event_date').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
                                             img: $(i2).find('.eventpage_avatar').attr('src'),
                                             title: $(i2).find('.event_title').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-                                            desciption: $(i2).find('.event_description').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
+                                            description: $(i2).find('.event_description').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
                                             address: res.result.features[0].properties.name,
                                             position: res.result.features[0].geometry.coordinates
                                         })
@@ -56,18 +56,6 @@ request({uri:'http://gorodzovet.ru/list/penza/', method:'GET', encoding:'utf-8'}
         })
     });
 
-// geocoder.geocode(["Пенза " + $(i).text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '')])
-//     .then(function (res) {
-//         eventPosition.push({
-//             dateTime: $(i).parent().find('.coupon-time').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-//             img: $(i).parent().parent().parent().parent().find('.event_block_img').attr('src'),
-//             title: $(i).parent().parent().parent().find('.coupon-title').text(),
-//             desciption: $(i).parent().parent().parent().find('.coupon-desciption').text().replace(/\s{2,}/g, ' ').replace(/\s+$/, '').replace(/^\s+/, ''),
-//             address: res.result.features[0].properties.name,
-//             position: res.result.features[0].geometry.coordinates
-//         })
-//         // console.log('Выгружено '+eventPosition.length+' записей');
-//     });
 
 function makeid(length){
     var text = "";
@@ -364,3 +352,12 @@ app.get('/', function(req, res) {
 app.listen(80, '0.0.0.0',  function(){
      log.info('Express server listening on port 8090');
 });
+
+app.use(express.static('public'));
+//DbData("UPDATE events SET date_time = '"+dateTime+"' img = '"+img+"' title = '"+title+"' description = '"+description+"' address = '"+address+"' position = "+position+";", function(data){
+//                                            if (data.length == 0){
+//                                                console.log(inter++);
+//                                            }else{
+//                                                console.log('err');
+//                                            }
+//                                        });
