@@ -10,6 +10,16 @@ var WebSocketServer = require('ws').Server
 , wss = new WebSocketServer({ port: 8080 });
 var log = require('./libs/log')(module);
 const app  = express();
+var multer = require('multer');
+var storage =   multer.diskStorage({
+  destination: function (req, file, callback) {
+    callback(null, './uploads');
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.fieldname + '-' + Date.now());
+  }
+});
+var upload = multer({ storage : storage},{limits : {fieldSize : 100000000, fileSize : 100000000}}).single('userPhoto');
 
 var MultiGeocoder = require('multi-geocoder'),
     geocoder = new MultiGeocoder({ provider: 'yandex-cache', coordorder: 'latlong' });
@@ -179,6 +189,17 @@ app.post('/login/code', function(req, res){
         res.send({ok: false});
         return true;
     }
+});
+
+app.post('/api/photo',function(req,res){
+    upload(req,res,function(err) {
+        console.log(req.file);
+        console.log(err);
+        if(err) {
+            return res.end("Error uploading file.");
+        }
+        res.end("File is uploaded");
+    });
 });
 
 app.post('/user/position/update', function(req, res){
