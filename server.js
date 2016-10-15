@@ -313,6 +313,16 @@ app.get('/events', function(req, res){
     return true;
 });
 
+app.get('/users', function(req,res){
+    DbData("SELECT * FROM users",function(data){
+        if(data.length != 0){
+            res.send(data);
+        }else{
+            res.send({ok:false});
+        }
+    });
+})
+
 app.get('/getAddress', function (req, res) {
     geocoder.geocode([req.query.latitude + ',' + req.query.longitude])
         .then(function (res1) {
