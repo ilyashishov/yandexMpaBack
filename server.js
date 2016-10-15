@@ -181,6 +181,18 @@ app.post('/login/code', function(req, res){
     }
 });
 
+app.post('/user/position/update', function(req, res){
+    DbData("UPDATE users SET latitude = '"+req.body.latitude+"', longitude = '"+req.body.longitude+"';", function(data){
+        if(data.length == 0){
+            request = true;
+            res.send({ok:true});
+        }else{
+            request = false;
+            res.send({ok:false});
+        }
+    })
+})
+
 app.post('/registration', function(req, res){
     var hash = makeid(15);
     DbData("INSERT INTO users (phone, last_name, first_name, date_of_birth, token) VALUES ('"+req.body.phoneNumber+"', '"+req.body.lastName+"', '"+req.body.firstName+"', '"+req.body.dateOfBirth+"', '"+hash+"' );", function(data){
