@@ -53,14 +53,22 @@ request({uri:'http://vkevent.ru/city109/', method:'GET', encoding:'utf-8'},
                                 }
                             });
                             if(position){
-                                eventPosition.push({
-                                    dateTime: dateTime,
-                                    img: img,
-                                    title: title,
-                                    description: description,
-                                    address: address,
-                                    position: position.split(', ')
-                                })
+                                DbData('INSERT INTO events (date_time,img,title,description,address,position) VALUES (\''+dateTime+'\',\''+img+'\',\''+title+'\',\''+description+'\',\''+address+'\',array['+position.split(', ').map(Number)+'])', function(data){
+                                    if (data.length == 0){
+                                        console.log('ok');
+                                    }else{
+                                        console.log('err');
+
+                                    }
+                                });
+//                                eventPosition.push({
+//                                    dateTime: dateTime,
+//                                    img: img,
+//                                    title: title,
+//                                    description: description,
+//                                    address: address,
+//                                    position: position.split(', ')
+//                                })
                             }
                         }
                     });
@@ -349,14 +357,48 @@ app.get('/events', function(req, res){
     return true;
 });
 
+app.post('/events/player/new',function(req, res){
+    var players = [];
+
+    DbData("SELECT players FROM events WHERE id = "+req.body.id+";",function(data){
+        if(data.length !=0){
+            players.slice(data[0]);
+        }else{
+            console.log('ne poshlo')
+        }
+        if(players.length != 0){
+
+        }
+    })
+})
+
 app.get('/users', function(req,res){
-    DbData("SELECT * FROM users",function(data){
+    var userID
+    console.log(req.body)
+
+    DbData("SELECT id FROM users WHERE token = '"+req.body.hash+"';",function(data){
         if(data.length != 0){
-            res.send(data);
+            userID = data[0];
+             DbData("SELECT * FROM users",function(data){
+                    if(data.length != 0){
+                        data.forEach(function(index,i){
+                        DbData("SELECT * FROM chats WHERE (user_id_1 = "+userID+"AND user_id_2 = "+i.id+") OR (user_id_1 = "+i.id+"AND user_id_2 = "+userID+")",function(data){
+                            console.log(1);
+                        })
+                        if(data.length == index+1){
+                            res.send(data);
+                        }
+                        })
+                        console.log(2)
+                    }else{
+                        res.send({ok:false});
+                    }
+                });
         }else{
             res.send({ok:false});
         }
-    });
+
+    })
 })
 
 app.get('/getAddress', function (req, res) {
@@ -381,10 +423,3 @@ app.listen(80, '0.0.0.0',  function(){
 });
 
 app.use(express.static('public'));
-//DbData("UPDATE events SET date_time = '"+dateTime+"' img = '"+img+"' title = '"+title+"' description = '"+description+"' address = '"+address+"' position = "+position+";", function(data){
-//                                            if (data.length == 0){
-//                                                console.log(inter++);
-//                                            }else{
-//                                                console.log('err');
-//                                            }
-//                                        });
